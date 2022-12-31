@@ -11,7 +11,7 @@ namespace YYYServerOpenSorcePlugin
     public sealed class Config : IConfig
     {
         [Description("是否开启插件")]
-        public bool IsEnabled { get; set; } = true;
+        public bool IsEnabled { get; set; } = false;
         [Description("是否开启扫地插件")]
         public bool Enable_cleaneraddon { get; set; } = true;
         [Description("是否开启Debug")]

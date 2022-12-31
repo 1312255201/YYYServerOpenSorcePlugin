@@ -2,7 +2,9 @@
 using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
+using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Server;
+using InventorySystem.Items.Pickups;
 using MEC;
 using Mirror;
 using System;
@@ -16,13 +18,27 @@ namespace YYYServerOpenSorcePlugin.Events.Function
 {
     public class cleaneraddon
     {
-        public static List<Pickup> Roundstartthing = new List<Pickup>();
+        public static List<ushort> Roundstartthing = new List<ushort>();
         public static List<CoroutineHandle> Coroutines = new List<CoroutineHandle>();
         private static void OnRoundStart()
         {
-            foreach (Pickup pickup in Map.Pickups)
+            ItemPickupBase[] array2 = UnityEngine.Object.FindObjectsOfType<ItemPickupBase>();
+            foreach (ItemPickupBase item in array2)
             {
-                Roundstartthing.Add(pickup);
+                if (!Roundstartthing.Contains(item.Info.Serial))
+                {
+                    Roundstartthing.Add(item.Info.Serial);
+                    Log.Info(item.Info.Serial);
+                }
+            }
+            Log.Info("-------------");
+            foreach (Pickup item in Pickup.List)
+            {
+                if(!Roundstartthing.Contains(item.Serial))
+                {
+                    Roundstartthing.Add(item.Serial);
+                    Log.Info(item.Serial);
+                }
             }
             Coroutines.Add(Timing.RunCoroutine(CleanFuc()));
         }
@@ -46,17 +62,17 @@ namespace YYYServerOpenSorcePlugin.Events.Function
                 Exiled.API.Features.Map.Broadcast(1, "<color=#FFFF00>[小鱼服务器清理大师]</color>\n<color=#66FFFF>哇你们白给了好多垃圾成堆了呀</color>\n我会在<color=#FF0000>1s</color>后清理服务器", Broadcast.BroadcastFlags.Normal, false);
                 Exiled.API.Features.Map.Broadcast(4, "<color=#FFFF00>[小鱼服务器清理大师]</color>\n<color=#66FFFF>开始清理</color>", Broadcast.BroadcastFlags.Normal, false);
                 yield return Timing.WaitForSeconds(15f);
-                List<Pickup> needdel = new List<Pickup>();
                 int itemtime = 0;
                 int ragdolltime = 0;
-                foreach (Exiled.API.Features.Items.Pickup item in Map.Pickups)
+                ItemPickupBase[] array2 = UnityEngine.Object.FindObjectsOfType<ItemPickupBase>();
+                foreach (ItemPickupBase item in array2)
                 {
-                    if (!Roundstartthing.Contains(item) && !item.Type.IsScp() && !item.Type.IsKeycard())
+                    if (!Roundstartthing.Contains(item.Info.Serial) && !item.Info.ItemId.IsScp() && !item.Info.ItemId.IsKeycard() && item.Info.Serial!= 0)
                     {
                         bool flag = false;
                         try
                         {
-                            if (Room.Get(item.Position).Type == RoomType.Lcz914)
+                            if (Room.Get(item.Info.Position).Type == RoomType.Lcz914)
                             {
                                 flag = true;
                             }
@@ -68,15 +84,9 @@ namespace YYYServerOpenSorcePlugin.Events.Function
                         {
                             continue;
                         }
-                        needdel.Add(item);
+                        NetworkServer.Destroy(item.gameObject);
                         itemtime++;
                     }
-
-                }
-                while (needdel.Count > 0)
-                {
-                    needdel[0].Destroy();
-                    needdel.RemoveAt(0);
                 }
                 BasicRagdoll[] array = UnityEngine.Object.FindObjectsOfType<BasicRagdoll>();
                 foreach (BasicRagdoll ragdoll in array)
